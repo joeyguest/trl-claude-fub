@@ -28,8 +28,7 @@
     .quick-btn { font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .quick-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
     #messages { padding: 14px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
-    .message { display: flex; flex-direction: column; gap: 3px; animation: fadeUp 0.2s ease; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .message { display: flex; flex-direction: column; gap: 3px; }
     .message-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); }
     .message.user .message-label { color: var(--accent); }
     .message.assistant .message-label { color: var(--green); }
@@ -56,11 +55,6 @@
     #status-dot.loading { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
     #status-dot.error { background: var(--red); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    #unauthorized { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; gap: 10px; }
-    #unauthorized.visible { display: flex; }
-    #unauthorized h2 { font-size: 14px; font-weight: 600; color: var(--text); }
-    #unauthorized p { font-size: 12px; color: var(--text-dim); }
-    #unauthorized .lock-icon { font-size: 28px; }
   </style>
 </head>
 <body>
@@ -84,11 +78,6 @@
       <button class="quick-btn" data-prompt="Draft a personalized follow-up email for this lead. Conversational tone, under 100 words, reference something specific from our conversation.">Draft Email</button>
       <button class="quick-btn" data-prompt="Summarize everything known about this lead in 5 bullets or less. Name, situation, goals, budget, and biggest concern.">Quick Summary</button>
     </div>
-    <div id="unauthorized">
-      <div class="lock-icon">🔒</div>
-      <h2>Access Restricted</h2>
-      <p>TRL Claude is in testing mode.<br>Contact Joey to get access.</p>
-    </div>
     <div id="messages"></div>
     <div id="input-area">
       <div id="input-row">
@@ -107,7 +96,6 @@
     </div>
   </div>
   <script>
-    const ALLOWED_EMAILS = [];
     let personContext = null, conversationHistory = [], isLoading = false, lastAssistantMessage = '';
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('user-input');
@@ -115,7 +103,6 @@
     const statusText = document.getElementById('status-text');
     const statusDot = document.getElementById('status-dot');
     const leadBadge = document.getElementById('lead-badge');
-    const unauthorizedEl = document.getElementById('unauthorized');
 
     function notifyResize() {
       const h = document.documentElement.scrollHeight;
@@ -145,11 +132,7 @@
     }
 
     async function handleFUBContext(ctx) {
-      const userEmail = ctx?.user?.email || '';
-      if (!ALLOWED_EMAILS.includes(userEmail)) {
-        unauthorizedEl.classList.add('visible');
-        notifyResize(); return;
-      }
+      console.log('FUB context received:', JSON.stringify(ctx));
       if (ctx.context !== 'person' || !ctx.person) {
         addMessage('system', 'Open a contact record to use TRL Claude.');
         notifyResize(); return;
@@ -191,7 +174,11 @@
           method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ messages: conversationHistory, leadContext: buildLeadContext() })
         });
-        if (!res.ok) throw new Error('API error');
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error('Chat API error:', res.status, errText);
+          throw new Error('API error');
+        }
         const data = await res.json();
         removeTyping(typingId);
         addMessage('assistant', data.reply);
@@ -199,6 +186,7 @@
         lastAssistantMessage = data.reply;
         setStatus('Ready', '');
       } catch(err) {
+        console.error('Send message error:', err);
         removeTyping(typingId);
         addMessage('system', 'Something went wrong. Please try again.');
         setStatus('Error', 'error');
