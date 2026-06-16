@@ -1,8 +1,4 @@
-// api/chat.js
-// Handles Claude API calls with lead context
-// DEPLOY THIS FILE TO: api/chat.js in your Vercel project
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -48,8 +44,7 @@ Budget $400k, pre-approved to $450k
 Strong HOA aversion, 15 years of bad HOA experience
 Has RV in Ohio, needs space to park truck and RV
 Just him and wife, no kids, around 2000 sq ft
-Interested in Emerald Lakes, pricing mid-June
-Next steps: Send non-HOA Palm Bay examples, follow up on Eli's visit
+Next steps: Send non-HOA Palm Bay examples, follow up on Eli visit
 
 COMMUNICATION STYLE:
 - Direct and action-oriented
@@ -69,7 +64,7 @@ ${leadContext || 'No lead data loaded.'}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: systemPrompt,
         messages: messages,
@@ -79,7 +74,7 @@ ${leadContext || 'No lead data loaded.'}`;
     if (!response.ok) {
       const error = await response.text();
       console.error('Anthropic API error:', error);
-      return res.status(500).json({ error: 'Claude API error' });
+      return res.status(500).json({ error: 'Claude API error', details: error });
     }
 
     const data = await response.json();
@@ -88,6 +83,6 @@ ${leadContext || 'No lead data loaded.'}`;
     return res.status(200).json({ reply });
   } catch (err) {
     console.error('Chat handler error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
-}
+};
