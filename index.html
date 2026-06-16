@@ -14,23 +14,20 @@
       --red: #f87171; --text: #e8eaf0; --text-dim: #7a7f8e; --text-muted: #4a4f5e;
       --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
     }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.6; overflow: hidden; }
-    #app { display: flex; flex-direction: column; height: 100vh; max-height: 100vh; }
-    #header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    html, body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.6; overflow-y: auto; margin: 0; }
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+    #header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
     #header-left { display: flex; align-items: center; gap: 8px; }
-    #logo { width: 22px; height: 22px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
-    #header-title { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+    #logo { width: 22px; height: 22px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; }
+    #header-title { font-size: 13px; font-weight: 600; color: var(--text); }
     #lead-badge { font-size: 11px; color: var(--text-dim); font-family: var(--mono); background: var(--surface2); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #header-actions { display: flex; gap: 6px; align-items: center; }
+    #header-actions { display: flex; gap: 6px; }
     .icon-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 5px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; }
     .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
-    #quick-actions { display: flex; gap: 5px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+    #quick-actions { display: flex; gap: 5px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .quick-btn { font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .quick-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
-    #messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-    #messages::-webkit-scrollbar { width: 4px; }
-    #messages::-webkit-scrollbar-track { background: transparent; }
-    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    #messages { padding: 14px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
     .message { display: flex; flex-direction: column; gap: 3px; animation: fadeUp 0.2s ease; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .message-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); }
@@ -44,32 +41,26 @@
     .typing-dot { width: 5px; height: 5px; background: var(--text-muted); border-radius: 50%; animation: typingPulse 1.2s ease-in-out infinite; }
     .typing-dot:nth-child(2) { animation-delay: 0.2s; }
     .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typingPulse { 0%, 60%, 100% { opacity: 0.3; transform: scale(1); } 30% { opacity: 1; transform: scale(1.2); } }
-    #input-area { padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+    @keyframes typingPulse { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+    #input-area { padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); position: sticky; bottom: 0; }
     #input-row { display: flex; gap: 8px; align-items: flex-end; }
-    #user-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--text); font-family: var(--font); font-size: 12.5px; line-height: 1.5; resize: none; outline: none; min-height: 36px; max-height: 100px; overflow-y: auto; transition: border-color 0.15s; }
+    #user-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--text); font-family: var(--font); font-size: 12.5px; resize: none; outline: none; min-height: 36px; max-height: 100px; overflow-y: auto; transition: border-color 0.15s; }
     #user-input:focus { border-color: var(--accent); }
     #user-input::placeholder { color: var(--text-muted); }
-    #send-btn { background: var(--accent); border: none; border-radius: 7px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; color: white; }
+    #send-btn { background: var(--accent); border: none; border-radius: 7px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: all 0.15s; }
     #send-btn:hover { background: #3a7de8; }
     #send-btn:disabled { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; }
-    #status-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 14px; background: var(--bg); border-top: 1px solid var(--border); flex-shrink: 0; }
+    #status-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 14px; background: var(--bg); border-top: 1px solid var(--border); }
     #status-text { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
     #status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
     #status-dot.loading { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
     #status-dot.error { background: var(--red); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    #unauthorized { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; padding: 24px; text-align: center; }
+    #unauthorized { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; gap: 10px; }
     #unauthorized.visible { display: flex; }
     #unauthorized h2 { font-size: 14px; font-weight: 600; color: var(--text); }
-    #unauthorized p { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
-    #unauthorized .lock-icon { font-size: 28px; margin-bottom: 4px; }
-    #context-panel { display: none; padding: 12px 14px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-shrink: 0; max-height: 140px; overflow-y: auto; animation: fadeUp 0.2s ease; }
-    #context-panel.visible { display: block; }
-    #context-panel h4 { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); margin-bottom: 8px; }
-    .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
-    .context-item { font-size: 11px; color: var(--text-dim); }
-    .context-item span { color: var(--text); font-weight: 500; }
+    #unauthorized p { font-size: 12px; color: var(--text-dim); }
+    #unauthorized .lock-icon { font-size: 28px; }
   </style>
 </head>
 <body>
@@ -81,14 +72,9 @@
         <div id="lead-badge">Loading...</div>
       </div>
       <div id="header-actions">
-        <button class="icon-btn" id="context-toggle" title="Toggle lead context">⊞</button>
         <button class="icon-btn" id="clear-btn" title="Clear chat">↺</button>
         <button class="icon-btn" id="save-note-btn" title="Save last response as FUB note">⬇</button>
       </div>
-    </div>
-    <div id="context-panel">
-      <h4>Lead Context Loaded</h4>
-      <div class="context-grid" id="context-grid"></div>
     </div>
     <div id="quick-actions">
       <button class="quick-btn" data-prompt="Generate bullet point call notes from the most recent call transcript or activity in Joey's note style. Be concise and scannable.">Call Notes</button>
@@ -101,7 +87,7 @@
     <div id="unauthorized">
       <div class="lock-icon">🔒</div>
       <h2>Access Restricted</h2>
-      <p>TRL Claude is currently in testing mode.<br>Contact Joey to get access.</p>
+      <p>TRL Claude is in testing mode.<br>Contact Joey to get access.</p>
     </div>
     <div id="messages"></div>
     <div id="input-area">
@@ -121,16 +107,8 @@
     </div>
   </div>
   <script>
-    const CONFIG = {
-      allowedUserEmails: ['joeyguestfl@gmail.com'],
-    };
-
-    let personContext = null;
-    let conversationHistory = [];
-    let isLoading = false;
-    let lastAssistantMessage = '';
-    let contextVisible = false;
-
+    const ALLOWED_EMAILS = ['joeyguestfl@gmail.com'];
+    let personContext = null, conversationHistory = [], isLoading = false, lastAssistantMessage = '';
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
@@ -138,52 +116,65 @@
     const statusDot = document.getElementById('status-dot');
     const leadBadge = document.getElementById('lead-badge');
     const unauthorizedEl = document.getElementById('unauthorized');
-    const contextPanel = document.getElementById('context-panel');
-    const contextGrid = document.getElementById('context-grid');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.EmbeddedApp) {
-        window.EmbeddedApp.on('context', handleFUBContext);
-      } else {
-        setTimeout(() => {
-          handleFUBContext({
-            context: 'person',
-            person: { id: 12345, firstName: 'Test', lastName: 'Lead', emails: [{ value: 'test@example.com', isPrimary: 1 }], phones: [{ value: '(321) 555-1234', isPrimary: 1 }], stage: { name: 'Active Buyer' } },
-            user: { id: 1, name: 'Joey Guest', email: 'joeyguestfl@gmail.com' },
-            account: { id: 999, domain: 'teamreallocal' }
-          });
-        }, 500);
-      }
-    });
+    function notifyResize() {
+      const h = document.documentElement.scrollHeight;
+      try { window.parent.postMessage({ type: 'resize', height: h }, '*'); } catch(e){}
+      try { window.parent.postMessage({ height: h }, '*'); } catch(e){}
+    }
+
+    function getContextFromURL() {
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const c = p.get('context');
+        if (!c) return null;
+        return JSON.parse(atob(c.replace(/-/g,'+').replace(/_/g,'/')));
+      } catch(e) { return null; }
+    }
+
+    function initApp() {
+      const urlCtx = getContextFromURL();
+      if (urlCtx) { handleFUBContext(urlCtx); return; }
+      if (window.EmbeddedApp) { window.EmbeddedApp.on('context', handleFUBContext); return; }
+      handleFUBContext({
+        context: 'person',
+        person: { id: 12345, firstName: 'Test', lastName: 'Lead', emails:[{value:'test@example.com',isPrimary:1}], phones:[{value:'(321) 555-1234',isPrimary:1}], stage:{name:'Active Buyer'} },
+        user: { id: 1, name: 'Joey Guest', email: 'joeyguestfl@gmail.com' },
+        account: { id: 999, domain: 'teamreallocal' }
+      });
+    }
 
     async function handleFUBContext(ctx) {
       const userEmail = ctx?.user?.email || '';
-      if (!CONFIG.allowedUserEmails.includes(userEmail)) {
-        document.getElementById('app').style.display = 'none';
+      if (!ALLOWED_EMAILS.includes(userEmail)) {
         unauthorizedEl.classList.add('visible');
-        return;
+        notifyResize(); return;
       }
-      if (ctx.context !== 'person' || !ctx.person) { addMessage('system', 'Open a contact record to use TRL Claude.'); return; }
+      if (ctx.context !== 'person' || !ctx.person) {
+        addMessage('system', 'Open a contact record to use TRL Claude.');
+        notifyResize(); return;
+      }
       personContext = ctx;
       const person = ctx.person;
-      const fullName = `${person.firstName || ''} ${person.lastName || ''}`.trim();
-      leadBadge.textContent = fullName || 'Unknown Lead';
-      contextGrid.innerHTML = [['Name', fullName], ['Stage', person.stage?.name || 'Unknown'], ['Email', person.emails?.[0]?.value || 'None'], ['Phone', person.phones?.[0]?.value || 'None']].map(([l, v]) => `<div class="context-item">${l}: <span>${v}</span></div>`).join('');
+      const fullName = (person.firstName||'') + ' ' + (person.lastName||'');
+      leadBadge.textContent = fullName.trim() || 'Unknown Lead';
       setStatus('Fetching lead data...', 'loading');
+      notifyResize();
       try {
         const leadData = await fetchLeadData(person.id);
         personContext.fullData = leadData;
         setStatus('Ready', '');
-        addMessage('system', `Loaded ${fullName}. ${leadData.summary}`);
-      } catch (err) {
+        addMessage('system', 'Loaded ' + fullName.trim() + '. ' + leadData.summary);
+      } catch(err) {
         setStatus('Error loading lead', 'error');
-        addMessage('system', `Loaded basic context for ${fullName}. Could not fetch full activity.`);
+        addMessage('system', 'Loaded ' + fullName.trim() + '. Could not fetch full activity.');
       }
+      notifyResize();
     }
 
     async function fetchLeadData(personId) {
-      const res = await fetch(`/api/lead?personId=${personId}`);
-      if (!res.ok) throw new Error('Failed to fetch lead data');
+      const res = await fetch('/api/lead?personId=' + personId);
+      if (!res.ok) throw new Error('Failed');
       return res.json();
     }
 
@@ -194,8 +185,12 @@
       const typingId = addTyping();
       setStatus('Claude is thinking...', 'loading');
       conversationHistory.push({ role: 'user', content: text });
+      notifyResize();
       try {
-        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: conversationHistory, leadContext: buildLeadContext() }) });
+        const res = await fetch('/api/chat', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ messages: conversationHistory, leadContext: buildLeadContext() })
+        });
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
         removeTyping(typingId);
@@ -203,37 +198,39 @@
         conversationHistory.push({ role: 'assistant', content: data.reply });
         lastAssistantMessage = data.reply;
         setStatus('Ready', '');
-      } catch (err) {
+      } catch(err) {
         removeTyping(typingId);
         addMessage('system', 'Something went wrong. Please try again.');
         setStatus('Error', 'error');
-        setTimeout(() => setStatus('Ready', ''), 3000);
+        setTimeout(() => setStatus('Ready',''), 3000);
       } finally {
-        isLoading = false; sendBtn.disabled = false; inputEl.focus();
+        isLoading = false; sendBtn.disabled = false; inputEl.focus(); notifyResize();
       }
     }
 
     function buildLeadContext() {
       if (!personContext) return 'No lead context available.';
-      const person = personContext.person;
-      const fullName = `${person.firstName || ''} ${person.lastName || ''}`.trim();
-      const d = personContext.fullData;
-      let ctx = `LEAD: ${fullName}\nStage: ${person.stage?.name || 'Unknown'}\nEmail: ${person.emails?.[0]?.value || 'None'}\nPhone: ${person.phones?.[0]?.value || 'None'}\n`;
+      const p = personContext.person, d = personContext.fullData;
+      const name = ((p.firstName||'') + ' ' + (p.lastName||'')).trim();
+      let ctx = 'LEAD: ' + name + '\nStage: ' + (p.stage?.name||'Unknown') + '\nEmail: ' + (p.emails?.[0]?.value||'None') + '\nPhone: ' + (p.phones?.[0]?.value||'None') + '\n';
       if (d) {
-        if (d.notes?.length) ctx += `\nNOTES:\n${d.notes.map(n => `- ${n.created}: ${n.body}`).join('\n')}\n`;
-        if (d.calls?.length) ctx += `\nCALLS:\n${d.calls.map(c => `- ${c.created}: ${c.duration}s, outcome: ${c.outcome || 'none'}${c.note ? ', note: ' + c.note : ''}${c.transcript ? ', transcript: ' + c.transcript : ''}`).join('\n')}\n`;
-        if (d.tasks?.length) ctx += `\nTASKS:\n${d.tasks.map(t => `- ${t.dueDate}: ${t.name} [${t.isCompleted ? 'done' : 'open'}]`).join('\n')}\n`;
-        if (d.events?.length) ctx += `\nRECENT ACTIVITY:\n${d.events.slice(0, 10).map(e => `- ${e.created}: ${e.type} - ${e.description || ''}`).join('\n')}\n`;
+        if (d.notes?.length) ctx += '\nNOTES:\n' + d.notes.map(n => '- ' + n.created + ': ' + n.body).join('\n') + '\n';
+        if (d.calls?.length) ctx += '\nCALLS:\n' + d.calls.map(c => '- ' + c.created + ': ' + c.duration + 's' + (c.note?', note: '+c.note:'') + (c.transcript?', transcript: '+c.transcript:'')).join('\n') + '\n';
+        if (d.tasks?.length) ctx += '\nTASKS:\n' + d.tasks.map(t => '- ' + t.dueDate + ': ' + t.name + ' [' + (t.isCompleted?'done':'open') + ']').join('\n') + '\n';
+        if (d.events?.length) ctx += '\nRECENT ACTIVITY:\n' + d.events.slice(0,10).map(e => '- ' + e.created + ': ' + e.type + ' - ' + (e.description||'')).join('\n') + '\n';
       }
       return ctx;
     }
 
     function addMessage(role, text) {
-      const div = document.createElement('div'); div.className = `message ${role}`;
-      const label = document.createElement('div'); label.className = 'message-label'; label.textContent = role === 'user' ? 'You' : role === 'assistant' ? 'Claude' : 'System';
+      const div = document.createElement('div'); div.className = 'message ' + role;
+      const label = document.createElement('div'); label.className = 'message-label';
+      label.textContent = role==='user'?'You':role==='assistant'?'Claude':'System';
       const bubble = document.createElement('div'); bubble.className = 'message-bubble'; bubble.textContent = text;
       if (role !== 'system') div.appendChild(label);
-      div.appendChild(bubble); messagesEl.appendChild(div); messagesEl.scrollTop = messagesEl.scrollHeight;
+      div.appendChild(bubble); messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      setTimeout(notifyResize, 100);
       return div;
     }
 
@@ -241,39 +238,47 @@
       const id = 'typing-' + Date.now();
       const div = document.createElement('div'); div.className = 'message assistant'; div.id = id;
       const label = document.createElement('div'); label.className = 'message-label'; label.textContent = 'Claude';
-      const indicator = document.createElement('div'); indicator.className = 'typing-indicator'; indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-      div.appendChild(label); div.appendChild(indicator); messagesEl.appendChild(div); messagesEl.scrollTop = messagesEl.scrollHeight;
+      const ind = document.createElement('div'); ind.className = 'typing-indicator';
+      ind.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      div.appendChild(label); div.appendChild(ind); messagesEl.appendChild(div);
       return id;
     }
 
-    function removeTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
+    function removeTyping(id) { const el = document.getElementById(id); if(el) el.remove(); }
 
     function setStatus(text, state) {
       statusText.textContent = text; statusDot.className = '';
-      if (state === 'loading') statusDot.classList.add('loading');
-      else if (state === 'error') statusDot.classList.add('error');
+      if (state==='loading') statusDot.classList.add('loading');
+      else if (state==='error') statusDot.classList.add('error');
     }
 
     async function saveAsNote() {
       if (!lastAssistantMessage || !personContext?.person?.id) return;
       try {
         setStatus('Saving note...', 'loading');
-        const res = await fetch('/api/save-note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ personId: personContext.person.id, note: lastAssistantMessage }) });
+        const res = await fetch('/api/save-note', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ personId: personContext.person.id, note: lastAssistantMessage })
+        });
         if (!res.ok) throw new Error();
-        setStatus('Note saved to FUB', ''); setTimeout(() => setStatus('Ready', ''), 2500);
-      } catch { setStatus('Failed to save note', 'error'); setTimeout(() => setStatus('Ready', ''), 2500); }
+        setStatus('Note saved to FUB', ''); setTimeout(() => setStatus('Ready',''), 2500);
+      } catch { setStatus('Failed to save note','error'); setTimeout(() => setStatus('Ready',''), 2500); }
     }
 
     sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
-    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl.value); } });
-    inputEl.addEventListener('input', () => { inputEl.style.height = 'auto'; inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px'; });
+    inputEl.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(inputEl.value);} });
+    inputEl.addEventListener('input', () => { inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,100)+'px'; });
     document.getElementById('clear-btn').addEventListener('click', () => {
-      messagesEl.innerHTML = ''; conversationHistory = []; lastAssistantMessage = '';
-      if (personContext?.person) { const name = `${personContext.person.firstName || ''} ${personContext.person.lastName || ''}`.trim(); addMessage('system', `Chat cleared. Lead: ${name}`); }
+      messagesEl.innerHTML=''; conversationHistory=[]; lastAssistantMessage='';
+      const name = personContext?.person ? ((personContext.person.firstName||'')+' '+(personContext.person.lastName||'')).trim() : '';
+      if (name) addMessage('system','Chat cleared. Lead: '+name);
+      notifyResize();
     });
     document.getElementById('save-note-btn').addEventListener('click', saveAsNote);
-    document.getElementById('context-toggle').addEventListener('click', () => { contextVisible = !contextVisible; contextPanel.classList.toggle('visible', contextVisible); });
-    document.querySelectorAll('.quick-btn').forEach(btn => { btn.addEventListener('click', () => sendMessage(btn.dataset.prompt)); });
+    document.querySelectorAll('.quick-btn').forEach(btn => btn.addEventListener('click', () => sendMessage(btn.dataset.prompt)));
+
+    window.addEventListener('load', () => { initApp(); setInterval(notifyResize, 2000); });
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
