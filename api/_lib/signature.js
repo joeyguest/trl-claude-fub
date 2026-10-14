@@ -16,7 +16,11 @@ function verifyContext(context, signature, maxAgeSeconds) {
     return { ok: false, status: 400, error: 'Missing context or signature' };
   }
 
-  if (!hmacMatches(secret, context, signature)) {
+  // The docs' examples key the HMAC with the secret string, but the secret is
+  // 64 hex chars, so also accept the hex-decoded 32-byte form.
+  const keys = [secret];
+  if (/^[0-9a-fA-F]{64}$/.test(secret)) keys.push(Buffer.from(secret, 'hex'));
+  if (!keys.some(k => hmacMatches(k, context, signature))) {
     return { ok: false, status: 401, error: 'Invalid signature' };
   }
 
