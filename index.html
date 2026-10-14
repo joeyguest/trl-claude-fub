@@ -4,34 +4,50 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TRL Claude</title>
-  <script type="text/javascript" src="https://eia.followupboss.com/embeddedApps-v1.0.1.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0f1117; --surface: #16191f; --surface2: #1d2128; --border: #2a2d35;
       --accent: #4f8ef7; --accent-dim: rgba(79,142,247,0.12); --green: #3ecf8e;
-      --red: #f87171; --text: #e8eaf0; --text-dim: #7a7f8e; --text-muted: #4a4f5e;
+      --red: #f87171; --amber: #fbbf24; --text: #e8eaf0; --text-dim: #7a7f8e; --text-muted: #4a4f5e;
       --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
     }
+    /* Safari iframe fix: no overflow-y on body, no 100vh. The page grows and the parent resizes the iframe. */
     html, body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.6; margin: 0; }
     #app { display: flex; flex-direction: column; min-height: 600px; }
-    #header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
-    #header-left { display: flex; align-items: center; gap: 8px; }
-    #logo { width: 22px; height: 22px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; }
-    #header-title { font-size: 13px; font-weight: 600; color: var(--text); }
-    #lead-badge { font-size: 11px; color: var(--text-dim); font-family: var(--mono); background: var(--surface2); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #header-actions { display: flex; gap: 6px; }
+    #header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); gap: 8px; }
+    #header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    #logo { width: 22px; height: 22px; flex-shrink: 0; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; }
+    #header-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
+    #lead-badge { font-size: 11px; color: var(--text-dim); font-family: var(--mono); background: var(--surface2); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #header-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .icon-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 5px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; }
-    .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+    .icon-btn:hover:not(:disabled) { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+    .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     #quick-actions { display: flex; gap: 5px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .quick-btn { font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .quick-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+    .quick-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+    .quick-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #data-strip { display: none; gap: 10px; padding: 5px 14px; background: var(--bg); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
+    #data-strip .warn { color: var(--amber); }
+    #data-strip .bad { color: var(--red); }
+    #connect-panel { display: none; margin: 18px 14px 0; padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); text-align: center; }
+    #connect-panel p { color: var(--text-dim); font-size: 12px; margin-bottom: 12px; }
+    #connect-panel .scopes { text-align: left; font-size: 11px; color: var(--text-muted); margin: 0 auto 14px; max-width: 320px; list-style: none; }
+    #connect-panel .scopes li::before { content: '- '; }
+    .primary-btn { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: white; background: var(--accent); border: none; border-radius: 7px; padding: 9px 16px; cursor: pointer; transition: background 0.15s; }
+    .primary-btn:hover { background: #3a7de8; }
+    #connect-fallback { display: none; margin-top: 10px; font-size: 11px; }
+    #connect-fallback a { color: var(--accent); }
     #messages { padding: 14px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
     .message { display: flex; flex-direction: column; gap: 3px; }
+    .message-head { display: flex; align-items: center; justify-content: space-between; }
     .message-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); }
     .message.user .message-label { color: var(--accent); }
     .message.assistant .message-label { color: var(--green); }
+    .copy-btn { font-family: var(--mono); font-size: 10px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0 2px; }
+    .copy-btn:hover { color: var(--text); }
     .message-bubble { padding: 10px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.65; color: var(--text); white-space: pre-wrap; word-break: break-word; }
     .message.user .message-bubble { background: var(--accent-dim); border: 1px solid rgba(79,142,247,0.2); border-radius: 8px 8px 2px 8px; }
     .message.assistant .message-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 2px 8px 8px 8px; }
@@ -46,14 +62,18 @@
     #user-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--text); font-family: var(--font); font-size: 12.5px; resize: none; outline: none; min-height: 36px; max-height: 100px; overflow-y: auto; transition: border-color 0.15s; }
     #user-input:focus { border-color: var(--accent); }
     #user-input::placeholder { color: var(--text-muted); }
-    #send-btn { background: var(--accent); border: none; border-radius: 7px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: all 0.15s; }
-    #send-btn:hover { background: #3a7de8; }
+    #user-input:disabled { opacity: 0.5; }
+    #send-btn { background: var(--accent); border: none; border-radius: 7px; width: 36px; height: 36px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: all 0.15s; }
+    #send-btn:hover:not(:disabled) { background: #3a7de8; }
     #send-btn:disabled { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; }
-    #status-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 14px; background: var(--bg); border-top: 1px solid var(--border); }
-    #status-text { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
-    #status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    #status-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 14px; background: var(--bg); border-top: 1px solid var(--border); }
+    #status-left { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    #status-text { font-size: 10px; color: var(--text-muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #status-dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: var(--green); }
     #status-dot.loading { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
     #status-dot.error { background: var(--red); }
+    #disconnect-btn { display: none; font-family: var(--mono); font-size: 10px; color: var(--text-muted); background: none; border: none; cursor: pointer; white-space: nowrap; }
+    #disconnect-btn:hover { color: var(--red); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   </style>
 </head>
@@ -66,23 +86,32 @@
         <div id="lead-badge">Loading...</div>
       </div>
       <div id="header-actions">
+        <button class="icon-btn" id="refresh-btn" title="Refresh CRM data" disabled>⟳</button>
         <button class="icon-btn" id="clear-btn" title="Clear chat">↺</button>
-        <button class="icon-btn" id="save-note-btn" title="Save last response as FUB note">⬇</button>
+        <button class="icon-btn" id="save-note-btn" title="Save last response as Sure Send note" disabled>⬇</button>
       </div>
     </div>
     <div id="quick-actions">
-      <button class="quick-btn" data-prompt="Generate bullet point call notes from the most recent call transcript or activity in Joey's note style. Be concise and scannable.">Call Notes</button>
-      <button class="quick-btn" data-prompt="Audit this lead. What is their current situation, where are they in the buying process, what has been done, and what is slipping or needs follow-up?">Lead Audit</button>
-      <button class="quick-btn" data-prompt="What should my next move be with this lead? Give me a specific recommended action with a suggested message or talking point.">Next Move</button>
-      <button class="quick-btn" data-prompt="Draft a short personalized follow-up text message for this lead based on what you know about them. Keep it casual and natural, not salesy.">Draft Text</button>
-      <button class="quick-btn" data-prompt="Draft a personalized follow-up email for this lead. Conversational tone, under 100 words, reference something specific from our conversation.">Draft Email</button>
-      <button class="quick-btn" data-prompt="Summarize everything known about this lead in 5 bullets or less. Name, situation, goals, budget, and biggest concern.">Quick Summary</button>
+      <button class="quick-btn" disabled data-prompt="Generate bullet point call notes from the most recent call transcript in Joey's note style. Use the transcript first, then the call summary if there's no transcript. Short scannable lines, next steps at the bottom.">Call Notes</button>
+      <button class="quick-btn" disabled data-prompt="Audit this lead. What is their current situation, where are they in the buying process, what has been done so far (calls, texts, emails, notes), and what is slipping or needs follow-up?">Lead Audit</button>
+      <button class="quick-btn" disabled data-prompt="What should my next move be with this lead? Give me one specific recommended action, when to do it, and the talking points or message to use.">Next Move</button>
+      <button class="quick-btn" disabled data-prompt="Draft a short personalized follow-up text message for this lead based on what you know about them. Casual and natural, not salesy. Reference something specific from our last conversation.">Draft Text</button>
+      <button class="quick-btn" disabled data-prompt="Draft a personalized follow-up email for this lead. Conversational tone, under 100 words, include a subject line, reference something specific from our conversations.">Draft Email</button>
+      <button class="quick-btn" disabled data-prompt="Summarize everything known about this lead in 5 bullets. Who they are, situation, goals, budget, and biggest concern.">Quick Summary</button>
+      <button class="quick-btn" disabled data-prompt="Run the lead health check. Go through each checklist item (active outreach, budget, timeline, overdue tasks, future task scheduled, missing qualifying info) and mark it OK or FLAG with a short reason. If there are zero future tasks, flag NO NEXT STEP SCHEDULED and suggest the task to create.">Health Check</button>
+    </div>
+    <div id="data-strip"></div>
+    <div id="connect-panel">
+      <p>Connect your Sure Send account so TRL Claude can read this contact's notes, calls, emails, and tasks.</p>
+      <ul class="scopes" id="scope-list"></ul>
+      <button class="primary-btn" id="connect-btn">Connect to Sure Send</button>
+      <div id="connect-fallback">Popup blocked. <a id="connect-link" href="#" target="_blank" rel="noopener">Open authorization page</a>, then come back here.</div>
     </div>
     <div id="messages"></div>
     <div id="input-area">
       <div id="input-row">
-        <textarea id="user-input" placeholder="Ask anything about this lead..." rows="1"></textarea>
-        <button id="send-btn">
+        <textarea id="user-input" placeholder="Ask anything about this lead..." rows="1" disabled></textarea>
+        <button id="send-btn" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -91,182 +120,499 @@
       </div>
     </div>
     <div id="status-bar">
-      <div id="status-text">Ready</div>
-      <div id="status-dot"></div>
+      <div id="status-left">
+        <div id="status-dot"></div>
+        <div id="status-text">Starting...</div>
+      </div>
+      <button id="disconnect-btn" title="Forget the Sure Send token stored in this browser">Disconnect</button>
     </div>
   </div>
   <script>
-    let personContext = null, conversationHistory = [], isLoading = false, lastAssistantMessage = '';
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const statusText = document.getElementById('status-text');
-    const statusDot = document.getElementById('status-dot');
-    const leadBadge = document.getElementById('lead-badge');
+    // Limits that keep the lead context a reasonable size for Claude
+    const LIMITS = { transcripts: 3, transcriptChars: 15000, emails: 15, emailChars: 3000, notes: 40, noteChars: 3000, pages: 3 };
 
+    const state = {
+      rawContext: null, signature: null, ctx: null,
+      token: null, crm: null, history: [], lastReply: '', lastSavedReply: '',
+      busy: false, loadingData: false,
+    };
+
+    const $ = id => document.getElementById(id);
+    const messagesEl = $('messages'), inputEl = $('user-input'), sendBtn = $('send-btn');
+    const quickBtns = Array.from(document.querySelectorAll('.quick-btn'));
+
+    // ---------- iframe height ----------
     function notifyResize() {
       const h = document.documentElement.scrollHeight;
-      try { window.parent.postMessage({ type: 'resize', height: h }, '*'); } catch(e){}
-      try { window.parent.postMessage({ height: h }, '*'); } catch(e){}
+      try { window.parent.postMessage({ type: 'resize', height: h }, '*'); } catch (e) {}
+      try { window.parent.postMessage({ height: h }, '*'); } catch (e) {}
+    }
+    if (window.ResizeObserver) new ResizeObserver(notifyResize).observe(document.body);
+
+    // ---------- storage (third-party iframe storage can throw, fall back to memory) ----------
+    const memStore = {};
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch (e) { return memStore[k] || null; } },
+      set(k, v) { try { localStorage.setItem(k, v); } catch (e) { memStore[k] = v; } },
+      del(k) { try { localStorage.removeItem(k); } catch (e) {} delete memStore[k]; },
+    };
+    function tokenKey() { return 'trl_claude_ss_token:' + state.ctx.team.id + ':' + state.ctx.user.id; }
+
+    // ---------- context ----------
+    // Read params by hand: URLSearchParams turns '+' into a space, which breaks Base64.
+    function rawParam(name) {
+      const m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+      return m ? decodeURIComponent(m[1]) : null;
     }
 
-    function getContextFromURL() {
-      try {
-        const p = new URLSearchParams(window.location.search);
-        const c = p.get('context');
-        if (!c) return null;
-        return JSON.parse(atob(c.replace(/-/g,'+').replace(/_/g,'/')));
-      } catch(e) { return null; }
-    }
-
-    function initApp() {
-      const urlCtx = getContextFromURL();
-      if (urlCtx) { handleFUBContext(urlCtx); return; }
-      if (window.EmbeddedApp) { window.EmbeddedApp.on('context', handleFUBContext); return; }
-      handleFUBContext({
-        context: 'person',
-        person: { id: 12345, firstName: 'Test', lastName: 'Lead', emails:[{value:'test@example.com',isPrimary:1}], phones:[{value:'(321) 555-1234',isPrimary:1}], stage:{name:'Active Buyer'} },
-        user: { id: 1, name: 'Joey Guest', email: 'joeyguestfl@gmail.com' },
-        account: { id: 999, domain: 'teamreallocal' }
-      });
-    }
-
-    async function handleFUBContext(ctx) {
-      console.log('FUB context received:', JSON.stringify(ctx));
-      if (ctx.context !== 'person' || !ctx.person) {
-        addMessage('system', 'Open a contact record to use TRL Claude.');
-        notifyResize(); return;
+    async function init() {
+      state.rawContext = rawParam('context');
+      state.signature = rawParam('signature');
+      if (!state.rawContext || !state.signature) {
+        $('lead-badge').textContent = 'No contact';
+        setStatus('Waiting for Sure Send', 'error');
+        addMessage('system', 'Open TRL Claude from a contact in Sure Send. This page needs the signed context Sure Send passes in.');
+        return;
       }
-      personContext = ctx;
-      const person = ctx.person;
-      const fullName = (person.firstName||'') + ' ' + (person.lastName||'');
-      leadBadge.textContent = fullName.trim() || 'Unknown Lead';
-      setStatus('Fetching lead data...', 'loading');
-      notifyResize();
-      try {
-        const leadData = await fetchLeadData(person.id);
-        personContext.fullData = leadData;
-        setStatus('Ready', '');
-        addMessage('system', 'Loaded ' + fullName.trim() + '. ' + leadData.summary);
-      } catch(err) {
-        setStatus('Error loading lead', 'error');
-        addMessage('system', 'Loaded ' + fullName.trim() + '. Could not fetch full activity.');
-      }
-      notifyResize();
-    }
 
-    async function fetchLeadData(personId) {
-      const res = await fetch('/api/lead?personId=' + personId);
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    }
-
-    async function sendMessage(text) {
-      if (!text.trim() || isLoading) return;
-      isLoading = true; sendBtn.disabled = true; inputEl.value = ''; inputEl.style.height = 'auto';
-      addMessage('user', text);
-      const typingId = addTyping();
-      setStatus('Claude is thinking...', 'loading');
-      conversationHistory.push({ role: 'user', content: text });
-      notifyResize();
+      setStatus('Verifying...', 'loading');
       try {
-        const res = await fetch('/api/chat', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ messages: conversationHistory, leadContext: buildLeadContext() })
+        const res = await fetch('/api/verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context: state.rawContext, signature: state.signature }),
         });
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error('Chat API error:', res.status, errText);
-          throw new Error('API error');
-        }
-        const data = await res.json();
-        removeTyping(typingId);
-        addMessage('assistant', data.reply);
-        conversationHistory.push({ role: 'assistant', content: data.reply });
-        lastAssistantMessage = data.reply;
-        setStatus('Ready', '');
-      } catch(err) {
-        console.error('Send message error:', err);
-        removeTyping(typingId);
-        addMessage('system', 'Something went wrong. Please try again.');
-        setStatus('Error', 'error');
-        setTimeout(() => setStatus('Ready',''), 3000);
-      } finally {
-        isLoading = false; sendBtn.disabled = false; inputEl.focus(); notifyResize();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Verification failed');
+        state.ctx = data.context;
+      } catch (err) {
+        $('lead-badge').textContent = 'Not verified';
+        setStatus('Verification failed', 'error');
+        addMessage('system', 'Could not verify the Sure Send context: ' + err.message + '. Try reloading the contact.');
+        return;
       }
+
+      const person = state.ctx.person;
+      if (!person) {
+        $('lead-badge').textContent = 'No contact';
+        setStatus('Ready', '');
+        addMessage('system', 'Open a contact record to use TRL Claude.');
+        return;
+      }
+      $('lead-badge').textContent = personName(person) || 'Unknown Lead';
+
+      state.token = store.get(tokenKey());
+      if (state.token) loadCrmData(false);
+      else showConnect();
+    }
+
+    function personName(p) { return [p.firstName, p.lastName].filter(Boolean).join(' ').trim() || p.name || ''; }
+
+    // ---------- authorization ----------
+    function showConnect(reason) {
+      setChatEnabled(false);
+      $('refresh-btn').disabled = true;
+      $('disconnect-btn').style.display = 'none';
+      const auth = state.ctx.authorization;
+      const panel = $('connect-panel');
+      panel.style.display = 'block';
+
+      const list = $('scope-list');
+      list.innerHTML = '';
+      (auth?.scope_descriptions || []).forEach(s => {
+        const li = document.createElement('li'); li.textContent = s.description || s.scope; list.appendChild(li);
+      });
+
+      if (!auth) {
+        panel.querySelector('p').textContent = 'This widget has no API permissions configured. In Sure Send, go to Settings > Integration Partner Widgets > Admin and add the read/write scopes under API Access.';
+        $('connect-btn').style.display = 'none';
+      } else if (!auth.authorization_url) {
+        panel.querySelector('p').textContent = 'Sure Send shows this widget as authorized, but there is no token saved in this browser. Revoke it in Settings > Widget Authorizations, then reload the contact to reconnect.';
+        $('connect-btn').style.display = 'none';
+      } else if (auth.requires_team_authorization) {
+        panel.querySelector('p').textContent = 'This widget needs team-wide authorization from a Sure Send admin or owner.';
+      }
+      setStatus(reason || 'Not connected', reason ? 'error' : '');
+    }
+
+    function startAuthorization() {
+      const url = state.ctx.authorization?.authorization_url;
+      if (!url) return;
+      // Must be a popup: navigating the iframe fails due to cross-site cookie rules
+      const popup = window.open(url, 'suresend_auth', 'width=560,height=720');
+      if (!popup) {
+        $('connect-link').href = url;
+        $('connect-fallback').style.display = 'block';
+      }
+      setStatus('Waiting for authorization...', 'loading');
+    }
+
+    function isSureSendOrigin(origin) {
+      try { const u = new URL(origin); return u.protocol === 'https:' && (u.hostname === 'suresend.ai' || u.hostname.endsWith('.suresend.ai')); }
+      catch (e) { return false; }
+    }
+
+    window.addEventListener('message', e => {
+      if (!isSureSendOrigin(e.origin)) return;
+      const d = e.data;
+      if (!d || d.type !== 'suresend_widget_authorized' || typeof d.api_token !== 'string' || !state.ctx) return;
+      state.token = d.api_token;
+      store.set(tokenKey(), d.api_token);
+      $('connect-panel').style.display = 'none';
+      $('connect-fallback').style.display = 'none';
+      addMessage('system', 'Connected to Sure Send.');
+      loadCrmData(false);
+    });
+
+    function disconnect() {
+      store.del(tokenKey());
+      state.token = null; state.crm = null;
+      $('data-strip').style.display = 'none';
+      showConnect();
+    }
+
+    // ---------- Sure Send API (through /api/suresend, the API has no CORS) ----------
+    class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+    async function ss(path, { method = 'GET', query, body } = {}) {
+      const res = await fetch('/api/suresend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + state.token },
+        body: JSON.stringify({ method, path, query, body }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new ApiError(res.status, data.errorMessage || data.error || ('HTTP ' + res.status));
+      return data;
+    }
+
+    async function listAll(path, key, personId) {
+      let page = 1, out = [];
+      while (page <= LIMITS.pages) {
+        const data = await ss(path, { query: { personId, page, limit: 100 } });
+        out = out.concat(data[key] || []);
+        if (!data.meta || page >= (data.meta.total_pages || 1)) break;
+        page++;
+      }
+      return out;
+    }
+
+    const when = x => new Date(x.occurredAt || x.sentAt || x.createdAt || 0).getTime();
+    const newestFirst = arr => arr.slice().sort((a, b) => when(b) - when(a));
+
+    async function loadCrmData(isRefresh) {
+      if (state.loadingData) return;
+      state.loadingData = true;
+      setChatEnabled(false);
+      $('refresh-btn').disabled = true;
+      setStatus(isRefresh ? 'Refreshing CRM data...' : 'Fetching lead data...', 'loading');
+
+      const id = state.ctx.person.id;
+      const [person, notes, calls, emails, tasks] = await Promise.allSettled([
+        ss('/people/' + id),
+        listAll('/notes', 'notes', id),
+        listAll('/calls', 'calls', id),
+        listAll('/emailMessages', 'emailMessages', id),
+        listAll('/tasks', 'tasks', id),
+      ]);
+      const all = [person, notes, calls, emails, tasks];
+
+      if (all.some(r => r.status === 'rejected' && r.reason?.status === 401)) {
+        state.loadingData = false;
+        store.del(tokenKey()); state.token = null;
+        addMessage('system', 'Your Sure Send connection was revoked or expired. Reconnect to continue.');
+        showConnect('Token invalid, reconnect');
+        return;
+      }
+
+      const val = (r, fb) => r.status === 'fulfilled' ? r.value : fb;
+      const crm = {
+        person: (p => p && (p.person || p.data || p))(val(person, null)),
+        notes: newestFirst(val(notes, [])),
+        calls: newestFirst(val(calls, [])),
+        emails: newestFirst(val(emails, [])),
+        tasks: val(tasks, []),
+        errors: {},
+        fetchedAt: new Date(),
+      };
+      ['person', 'notes', 'calls', 'emails', 'tasks'].forEach((k, i) => {
+        if (all[i].status === 'rejected') crm.errors[k] = all[i].reason.status === 403 ? 'missing permission' : all[i].reason.message;
+      });
+
+      // Transcripts are a separate endpoint per call; pull the most recent few
+      const withTranscript = crm.calls.filter(c => c.hasTranscript).slice(0, LIMITS.transcripts);
+      await Promise.all(withTranscript.map(async c => {
+        try { c.transcript = (await ss('/calls/' + c.id + '/transcript')).transcript || ''; }
+        catch (e) { c.transcriptError = e.status === 403 ? 'missing permission' : e.message; }
+      }));
+
+      // List usually includes the body; fetch individually if it didn't
+      const missingBody = crm.emails.slice(0, LIMITS.emails).filter(e => !e.body);
+      await Promise.all(missingBody.map(async e => {
+        try { const full = await ss('/emailMessages/' + e.id); e.body = (full.emailMessage || full).body || ''; } catch (err) {}
+      }));
+
+      state.crm = crm;
+      state.loadingData = false;
+      renderDataStrip();
+      $('refresh-btn').disabled = false;
+      $('disconnect-btn').style.display = 'block';
+      setChatEnabled(true);
+
+      const failed = Object.keys(crm.errors);
+      setStatus(failed.length ? 'Loaded with gaps' : 'Ready', failed.length ? 'error' : '');
+      const name = personName(state.ctx.person);
+      if (isRefresh) addMessage('system', 'CRM data refreshed for ' + name + '. Claude will use the updated data from here on.');
+      else addMessage('system', 'Loaded ' + name + '. ' + summaryLine(crm));
+      if (failed.length) addMessage('system', 'Could not load: ' + failed.map(k => k + ' (' + crm.errors[k] + ')').join(', ') + '. Check the widget permissions in Sure Send.');
+    }
+
+    function taskStatus(t, now) {
+      if (t.isCompleted) return 'DONE';
+      if (!t.dueDateTime) return 'OPEN (no due date)';
+      return new Date(t.dueDateTime).getTime() < now ? 'OVERDUE' : 'OPEN';
+    }
+
+    function taskCounts(crm) {
+      const now = Date.now();
+      const open = crm.tasks.filter(t => !t.isCompleted);
+      return {
+        open: open.length,
+        overdue: open.filter(t => taskStatus(t, now) === 'OVERDUE').length,
+        future: open.filter(t => taskStatus(t, now) !== 'OVERDUE').length,
+      };
+    }
+
+    function summaryLine(crm) {
+      const tc = taskCounts(crm);
+      const transcripts = crm.calls.filter(c => c.transcript).length;
+      return crm.notes.length + ' notes, ' + crm.calls.length + ' calls (' + transcripts + ' transcripts), ' + crm.emails.length + ' emails, ' + tc.open + ' open tasks.';
+    }
+
+    function renderDataStrip() {
+      const crm = state.crm, tc = taskCounts(crm), el = $('data-strip');
+      el.innerHTML = '';
+      const add = (text, cls) => { const s = document.createElement('span'); s.textContent = text; if (cls) s.className = cls; el.appendChild(s); };
+      add(crm.notes.length + ' notes');
+      add(crm.calls.length + ' calls');
+      add(crm.emails.length + ' emails');
+      add(tc.open + ' open tasks');
+      if (tc.overdue) add(tc.overdue + ' overdue', 'bad');
+      if (!tc.future && !crm.errors.tasks) add('NO NEXT STEP SCHEDULED', 'bad');
+      Object.keys(crm.errors).forEach(k => add(k + ': ' + crm.errors[k], 'warn'));
+      add('as of ' + crm.fetchedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+      el.style.display = 'flex';
+    }
+
+    // ---------- lead context for Claude ----------
+    function stripHtml(s) {
+      if (!s) return '';
+      if (!/[<&]/.test(s)) return s;
+      const doc = new DOMParser().parseFromString(s.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li)>/gi, '\n'), 'text/html');
+      return (doc.body.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    const cut = (s, n) => !s ? '' : (s.length > n ? s.slice(0, n) + '\n[truncated]' : s);
+    const fmt = d => d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown date';
+
+    function compact(obj, depth = 0) {
+      if (Array.isArray(obj)) { const a = obj.map(v => compact(v, depth + 1)).filter(v => v !== undefined); return a.length ? a : undefined; }
+      if (obj && typeof obj === 'object') {
+        const out = {};
+        for (const [k, v] of Object.entries(obj)) {
+          if (/^(updated_?at|created_?at)$/i.test(k) && depth > 0) continue;
+          const c = compact(v, depth + 1);
+          if (c !== undefined) out[k] = c;
+        }
+        return Object.keys(out).length ? out : undefined;
+      }
+      if (obj === null || obj === '' || obj === undefined) return undefined;
+      return obj;
+    }
+
+    function assignee(t) {
+      if (!t.assignedUserId) return 'unassigned';
+      if (t.assignedUserId === state.ctx.user.id) return 'you (' + (state.ctx.user.email || 'current user') + ')';
+      return 'another team member';
     }
 
     function buildLeadContext() {
-      if (!personContext) return 'No lead context available.';
-      const p = personContext.person, d = personContext.fullData;
-      const name = ((p.firstName||'') + ' ' + (p.lastName||'')).trim();
-      let ctx = 'LEAD: ' + name + '\nStage: ' + (p.stage?.name||'Unknown') + '\nEmail: ' + (p.emails?.[0]?.value||'None') + '\nPhone: ' + (p.phones?.[0]?.value||'None') + '\n';
-      if (d) {
-        if (d.notes?.length) ctx += '\nNOTES:\n' + d.notes.map(n => '- ' + n.created + ': ' + n.body).join('\n') + '\n';
-        if (d.calls?.length) ctx += '\nCALLS:\n' + d.calls.map(c => '- ' + c.created + ': ' + c.duration + 's' + (c.note?', note: '+c.note:'') + (c.transcript?', transcript: '+c.transcript:'')).join('\n') + '\n';
-        if (d.tasks?.length) ctx += '\nTASKS:\n' + d.tasks.map(t => '- ' + t.dueDate + ': ' + t.name + ' [' + (t.isCompleted?'done':'open') + ']').join('\n') + '\n';
-        if (d.events?.length) ctx += '\nRECENT ACTIVITY:\n' + d.events.slice(0,10).map(e => '- ' + e.created + ': ' + e.type + ' - ' + (e.description||'')).join('\n') + '\n';
+      const ctx = state.ctx, p = ctx.person, crm = state.crm;
+      const now = Date.now();
+      const lines = [];
+      lines.push('Today: ' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
+      lines.push('Agent using this widget: ' + (ctx.user.email || 'unknown') + ' (team: ' + (ctx.team.name || ctx.team.id) + ')');
+      lines.push('');
+      lines.push('LEAD: ' + personName(p));
+      lines.push('Stage: ' + (p.stage?.name || 'Unknown'));
+      lines.push('Emails: ' + ((p.emails || []).map(e => e.value || e.email).join(', ') || 'None'));
+      lines.push('Phones: ' + ((p.phones || []).map(ph => ph.phone || ph.normalized).join(', ') || 'None'));
+      if (!crm) return lines.join('\n') + '\n\nCRM activity could not be loaded.';
+
+      if (crm.person) {
+        lines.push('\nFULL PROFILE (raw Sure Send data):');
+        lines.push(cut(JSON.stringify(compact(crm.person) || {}, null, 1), 8000));
       }
-      return ctx;
+
+      const tc = taskCounts(crm);
+      lines.push('\nTASKS (' + tc.open + ' open, ' + tc.overdue + ' overdue, ' + tc.future + ' open and not overdue):');
+      if (crm.errors.tasks) lines.push('Could not load tasks: ' + crm.errors.tasks);
+      else if (!crm.tasks.length) lines.push('No tasks on file. NO NEXT STEP SCHEDULED.');
+      else {
+        const sorted = crm.tasks.slice().sort((a, b) => (a.isCompleted - b.isCompleted) || (new Date(a.dueDateTime || 8.64e15) - new Date(b.dueDateTime || 8.64e15)));
+        sorted.slice(0, 40).forEach(t => lines.push('- [' + taskStatus(t, now) + '] ' + (t.name || 'Untitled') + (t.type ? ' (' + t.type + ')' : '') + ', due ' + (t.dueDateTime ? fmt(t.dueDateTime) : 'none') + ', assigned to ' + assignee(t) + (t.description ? '. ' + cut(stripHtml(t.description), 300) : '')));
+        if (!tc.future) lines.push('Zero open future tasks. NO NEXT STEP SCHEDULED.');
+      }
+
+      lines.push('\nCALLS (' + crm.calls.length + ', newest first):');
+      if (crm.errors.calls) lines.push('Could not load calls: ' + crm.errors.calls);
+      crm.calls.slice(0, 25).forEach(c => {
+        let l = '- ' + fmt(c.occurredAt || c.createdAt) + ', ' + (c.isIncoming ? 'incoming' : 'outgoing') + ', ' + Math.round((c.duration || 0) / 60 * 10) / 10 + ' min' + (c.outcome ? ', ' + c.outcome : '');
+        if (c.sentimentLabel) l += ', sentiment ' + c.sentimentLabel;
+        if (c.conversationSummary) l += '\n  Summary: ' + c.conversationSummary;
+        if (c.conversationTopics?.length) l += '\n  Topics: ' + c.conversationTopics.join(', ');
+        if (c.note) l += '\n  Note: ' + stripHtml(c.note);
+        if (c.transcript) l += '\n  TRANSCRIPT:\n' + cut(c.transcript, LIMITS.transcriptChars);
+        else if (c.transcriptError) l += '\n  Transcript unavailable: ' + c.transcriptError;
+        lines.push(l);
+      });
+
+      lines.push('\nEMAILS (' + crm.emails.length + ', newest first):');
+      if (crm.errors.emails) lines.push('Could not load emails: ' + crm.errors.emails);
+      crm.emails.slice(0, LIMITS.emails).forEach(e => {
+        lines.push('- ' + fmt(e.sentAt || e.createdAt) + ' | from ' + (e.fromEmail || '?') + ' to ' + (e.toEmail || '?') + ' | ' + (e.status || '') + '\n  Subject: ' + (e.subject || '(none)') + '\n  ' + cut(stripHtml(e.body), LIMITS.emailChars).replace(/\n/g, '\n  '));
+      });
+
+      lines.push('\nNOTES (' + crm.notes.length + ', newest first):');
+      if (crm.errors.notes) lines.push('Could not load notes: ' + crm.errors.notes);
+      crm.notes.slice(0, LIMITS.notes).forEach(n => {
+        const author = n.user ? [n.user.firstName, n.user.lastName].filter(Boolean).join(' ') || n.user.email : '';
+        lines.push('- ' + fmt(n.createdAt) + (author ? ' by ' + author : '') + (n.isPinned ? ' [pinned]' : '') + (n.subject ? ' | ' + n.subject : '') + '\n  ' + cut(stripHtml(n.body), LIMITS.noteChars).replace(/\n/g, '\n  '));
+      });
+
+      return lines.join('\n');
     }
 
+    // ---------- chat ----------
+    async function sendMessage(text) {
+      if (!text.trim() || state.busy || !state.crm) return;
+      state.busy = true; setChatEnabled(false);
+      inputEl.value = ''; inputEl.style.height = 'auto';
+      addMessage('user', text);
+      const typing = addTyping();
+      setStatus('Claude is thinking...', 'loading');
+      state.history.push({ role: 'user', content: text });
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: state.history, leadContext: buildLeadContext(), context: state.rawContext, signature: state.signature }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        typing.remove();
+        addMessage('assistant', data.reply);
+        state.history.push({ role: 'assistant', content: data.reply });
+        state.lastReply = data.reply;
+        $('save-note-btn').disabled = false;
+        setStatus('Ready', '');
+      } catch (err) {
+        console.error('Chat error:', err);
+        typing.remove();
+        state.history.pop(); // drop the unanswered user turn so history stays alternating
+        addMessage('system', 'Something went wrong: ' + err.message);
+        setStatus('Error', 'error');
+        setTimeout(() => setStatus('Ready', ''), 3000);
+      } finally {
+        state.busy = false; setChatEnabled(true); inputEl.focus();
+      }
+    }
+
+    async function saveAsNote() {
+      if (!state.lastReply || !state.token) return;
+      if (state.lastReply === state.lastSavedReply) { setStatus('Already saved', ''); return; }
+      const btn = $('save-note-btn');
+      btn.disabled = true;
+      setStatus('Saving note...', 'loading');
+      try {
+        await ss('/notes', { method: 'POST', body: { personId: state.ctx.person.id, subject: 'TRL Claude', body: state.lastReply, isHtml: false } });
+        state.lastSavedReply = state.lastReply;
+        setStatus('Note saved to Sure Send', '');
+        setTimeout(() => setStatus('Ready', ''), 2500);
+      } catch (err) {
+        if (err.status === 401) { disconnect(); addMessage('system', 'Sure Send connection expired. Reconnect, then save again.'); return; }
+        setStatus(err.status === 403 ? 'No permission to write notes' : 'Failed to save note', 'error');
+        setTimeout(() => setStatus('Ready', ''), 3000);
+      } finally {
+        btn.disabled = !state.lastReply;
+      }
+    }
+
+    // ---------- UI helpers ----------
     function addMessage(role, text) {
       const div = document.createElement('div'); div.className = 'message ' + role;
-      const label = document.createElement('div'); label.className = 'message-label';
-      label.textContent = role==='user'?'You':role==='assistant'?'Claude':'System';
+      if (role !== 'system') {
+        const head = document.createElement('div'); head.className = 'message-head';
+        const label = document.createElement('div'); label.className = 'message-label';
+        label.textContent = role === 'user' ? 'You' : 'Claude';
+        head.appendChild(label);
+        if (role === 'assistant') {
+          const copy = document.createElement('button'); copy.className = 'copy-btn'; copy.textContent = 'copy';
+          copy.addEventListener('click', () => copyText(text, copy));
+          head.appendChild(copy);
+        }
+        div.appendChild(head);
+      }
       const bubble = document.createElement('div'); bubble.className = 'message-bubble'; bubble.textContent = text;
-      if (role !== 'system') div.appendChild(label);
       div.appendChild(bubble); messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-      setTimeout(notifyResize, 100);
+      notifyResize();
       return div;
     }
 
+    async function copyText(text, btn) {
+      try { await navigator.clipboard.writeText(text); }
+      catch (e) {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e2) {} ta.remove();
+      }
+      btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1500);
+    }
+
     function addTyping() {
-      const id = 'typing-' + Date.now();
-      const div = document.createElement('div'); div.className = 'message assistant'; div.id = id;
+      const div = document.createElement('div'); div.className = 'message assistant';
       const label = document.createElement('div'); label.className = 'message-label'; label.textContent = 'Claude';
       const ind = document.createElement('div'); ind.className = 'typing-indicator';
       ind.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
       div.appendChild(label); div.appendChild(ind); messagesEl.appendChild(div);
-      return id;
+      notifyResize();
+      return div;
     }
 
-    function removeTyping(id) { const el = document.getElementById(id); if(el) el.remove(); }
-
-    function setStatus(text, state) {
-      statusText.textContent = text; statusDot.className = '';
-      if (state==='loading') statusDot.classList.add('loading');
-      else if (state==='error') statusDot.classList.add('error');
+    function setChatEnabled(on) {
+      const enabled = on && !!state.crm && !state.busy && !state.loadingData;
+      inputEl.disabled = !enabled; sendBtn.disabled = !enabled;
+      quickBtns.forEach(b => b.disabled = !enabled);
     }
 
-    async function saveAsNote() {
-      if (!lastAssistantMessage || !personContext?.person?.id) return;
-      try {
-        setStatus('Saving note...', 'loading');
-        const res = await fetch('/api/save-note', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ personId: personContext.person.id, note: lastAssistantMessage })
-        });
-        if (!res.ok) throw new Error();
-        setStatus('Note saved to FUB', ''); setTimeout(() => setStatus('Ready',''), 2500);
-      } catch { setStatus('Failed to save note','error'); setTimeout(() => setStatus('Ready',''), 2500); }
+    function setStatus(text, kind) {
+      $('status-text').textContent = text;
+      $('status-dot').className = kind || '';
     }
 
+    // ---------- events ----------
     sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
-    inputEl.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(inputEl.value);} });
-    inputEl.addEventListener('input', () => { inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,100)+'px'; });
-    document.getElementById('clear-btn').addEventListener('click', () => {
-      messagesEl.innerHTML=''; conversationHistory=[]; lastAssistantMessage='';
-      const name = personContext?.person ? ((personContext.person.firstName||'')+' '+(personContext.person.lastName||'')).trim() : '';
-      if (name) addMessage('system','Chat cleared. Lead: '+name);
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl.value); } });
+    inputEl.addEventListener('input', () => { inputEl.style.height = 'auto'; inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px'; });
+    quickBtns.forEach(btn => btn.addEventListener('click', () => sendMessage(btn.dataset.prompt)));
+    $('connect-btn').addEventListener('click', startAuthorization);
+    $('refresh-btn').addEventListener('click', () => loadCrmData(true));
+    $('save-note-btn').addEventListener('click', saveAsNote);
+    $('disconnect-btn').addEventListener('click', () => { if (confirm('Forget the Sure Send token stored in this browser?')) disconnect(); });
+    $('clear-btn').addEventListener('click', () => {
+      messagesEl.innerHTML = ''; state.history = []; state.lastReply = '';
+      $('save-note-btn').disabled = true;
+      if (state.ctx?.person) addMessage('system', 'Chat cleared. Lead: ' + personName(state.ctx.person));
       notifyResize();
     });
-    document.getElementById('save-note-btn').addEventListener('click', saveAsNote);
-    document.querySelectorAll('.quick-btn').forEach(btn => btn.addEventListener('click', () => sendMessage(btn.dataset.prompt)));
 
-    window.addEventListener('load', () => { initApp(); setInterval(notifyResize, 2000); });
-    document.addEventListener('DOMContentLoaded', initApp);
+    init().finally(notifyResize);
   </script>
 </body>
 </html>

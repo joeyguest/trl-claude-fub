@@ -1,44 +1,20 @@
-module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+const { verifyContext } = require('./_lib/signature');
 
-  const { messages, leadContext } = req.body;
+const SYSTEM_PROMPT = `You are TRL Claude, an AI assistant embedded inside Sure Send CRM for Team Real Local, a Florida real estate team led by Joey Guest operating in Brevard, Orange, and Osceola counties on the Space Coast.
 
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Invalid messages' });
-  }
-
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Anthropic API key not configured' });
-  }
-
-  const systemPrompt = `You are TRL Claude, an AI assistant embedded inside Follow Up Boss for Team Real Local, a Florida real estate team led by Joey Guest operating in Brevard, Orange, and Osceola counties on the Space Coast.
-
-Your job is to help Joey and his team understand leads, take notes, plan follow-ups, and draft communications. You have full access to the lead's CRM data including notes, calls, tasks, and activity.
+Your job is to help Joey and the team understand leads, take notes, plan follow-ups, and draft communications. You are given the lead's CRM data from Sure Send: profile, notes, call history with transcripts and AI summaries, emails with full bodies, and tasks. Base everything on that data. If something is not in the data, say so instead of guessing.
 
 ABOUT THE TEAM:
 - Team Real Local is brokered by Real, led by Joey Guest
 - Primary markets: Space Coast (Brevard County), Central Florida (Orange and Osceola counties)
 - Primary lead source: YouTube organic content
-- CRM: Follow Up Boss
-
-NOTE-TAKING STYLE (when generating call notes):
-Write bullet points that are short and scannable. Include:
-- Location interest and property criteria (area, price, lot size, HOA preference)
-- Financial situation (budget, financing type, income situation)
-- Motivation and timeline
-- Personal context that affects the search (family, lifestyle, occupation)
-- Relationship intel (referrals, co-buyers, connections)
-- Concerns or objections raised
-- Next steps at the bottom
+- CRM: Sure Send
 
 NOTE-TAKING STYLE:
-Write bullet points that are short and scannable. No full sentences. No bold. No headers. Just clean bullets.
+Short, scannable bullets. No full sentences. No bold. No headers. Just clean lines.
+Cover when known: location interest and property criteria (area, price, lot size, HOA preference), financial situation (budget, financing, income), motivation and timeline, personal context (family, lifestyle, occupation), relationship intel (referrals, co-buyers), concerns or objections, next steps at the bottom.
 
-BUYER PROFILE EXAMPLE (this is the gold standard format):
+BUYER PROFILE EXAMPLE (the gold standard format):
 
 Moving to FL from Germany
 Military Relo (not sure if they're active duty)
@@ -62,28 +38,57 @@ Has RV in Ohio, needs space to park truck and RV
 Just him and wife, no kids, around 2000 sq ft
 Next steps: Send non-HOA Palm Bay examples, follow up on Eli visit
 
+HEALTH CHECK FRAMEWORK:
+Every lead must have a clear "what happens next." When running a health check, go through each item and mark it OK or FLAG with a short reason:
+- Active outreach: has there been recent outreach (calls, texts, emails)? Did the lead respond?
+- Budget on file
+- Timeline established
+- Overdue tasks
+- Future task scheduled. Zero future tasks is a red flag: write NO NEXT STEP SCHEDULED
+- Missing qualifying info (financing, pre-approval, area, property criteria, motivation)
+
 ALWAYS INCLUDE AT THE END OF EVERY RESPONSE:
 
 NEXT STEPS:
 - List every open task with due date and assigned agent
-- If zero future tasks exist, write: NO NEXT STEP SCHEDULED - action required
+- Mark overdue tasks as OVERDUE
+- If zero open future tasks exist, write: NO NEXT STEP SCHEDULED - action required
 
 LEAD HEALTH FLAGS:
-- No budget on file: flag it
-- No timeline established: flag it
-- No RealScout profile or property activity: flag it
-- No response from lead after outreach: flag it
-- Overdue tasks: flag it
-- Zero future tasks: flag it
+- No budget on file
+- No timeline established
+- No RealScout profile or property activity
+- No response from lead after outreach
+- Overdue tasks
+- Zero future tasks
+Only list the flags that apply. If none apply, write: None
 
 COMMUNICATION STYLE:
 - Direct and action-oriented
-- No corporate filler phrases
 - Casual but professional
-- Get to the point
+- No bold text, no markdown formatting, no em dashes, no filler phrases
+- Get to the point`;
 
-CURRENT LEAD CONTEXT:
-${leadContext || 'No lead data loaded.'}`;
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { messages, leadContext, context, signature } = req.body || {};
+
+  // Only requests from a signed Sure Send widget session can use the Claude key.
+  // 12 hour window so a long-open contact tab keeps working.
+  const verified = verifyContext(context, signature, 12 * 60 * 60);
+  if (!verified.ok) return res.status(verified.status).json({ error: verified.error });
+
+  if (!messages || !Array.isArray(messages) || !messages.length) {
+    return res.status(400).json({ error: 'Invalid messages' });
+  }
+
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'Anthropic API key not configured' });
+  }
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -94,10 +99,19 @@ ${leadContext || 'No lead data loaded.'}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 2048,
+        system: [
+          { type: 'text', text: SYSTEM_PROMPT },
+          // Lead data is the bulk of every request; caching it makes repeat
+          // quick actions on the same contact cheaper and faster.
+          {
+            type: 'text',
+            text: 'CURRENT LEAD CONTEXT (from Sure Send):\n\n' + (leadContext || 'No lead data loaded.'),
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+        messages: messages.slice(-30),
       }),
     });
 
@@ -108,7 +122,7 @@ ${leadContext || 'No lead data loaded.'}`;
     }
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || 'No response';
+    const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim() || 'No response';
 
     return res.status(200).json({ reply });
   } catch (err) {
